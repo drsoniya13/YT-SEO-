@@ -23,6 +23,7 @@ import { StatCard, PanelHeader, GlowingButton, NeuralLoadingOverlay } from '../c
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateCreativeContent } from '../services/geminiService';
+import ReactMarkdown from 'react-markdown';
 
 export function ScriptForge() {
   const [isForging, setIsForging] = useState(false);
@@ -31,6 +32,14 @@ export function ScriptForge() {
   const [description, setDescription] = useState('');
   const [generatedScript, setGeneratedScript] = useState('');
   const [copied, setCopied] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
 
   // Synced states
   const [duration, setDuration] = useState(120); // 2 minutes default
@@ -47,7 +56,7 @@ export function ScriptForge() {
   };
 
   const startForge = async () => {
-    if (!description.trim()) {
+    if (!description.trim() && !selectedFile) {
       alert('Please enter a description or upload a video.');
       return;
     }
@@ -55,8 +64,12 @@ export function ScriptForge() {
     setShowResult(false);
     
     try {
+      const promptContext = selectedFile 
+        ? `${description} (Context from file: ${selectedFile.name})` 
+        : description;
+
       const result = await generateCreativeContent(
-        `${description} (Duration: ${Math.floor(duration/60)}m ${duration%60}s, Word Count: ${wordCount})`, 
+        `${promptContext} (Duration: ${Math.floor(duration/60)}m ${duration%60}s, Word Count: ${wordCount})`, 
         'Full YouTube Script', 
         'Bengali'
       );
@@ -155,16 +168,41 @@ export function ScriptForge() {
 
                 <div className="space-y-4">
                    <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
-                     <Upload className="w-3 h-3 md:w-4 md:h-4" /> VISUAL ANCHOR (OPITONAL)
+                     <Upload className="w-3 h-3 md:w-4 md:h-4" /> VISUAL ANCHOR (OPTIONAL)
                    </label>
-                   <div className="border-2 border-dashed border-studio-border rounded-2xl p-10 md:p-16 flex flex-col items-center justify-center text-center space-y-5 group hover:border-studio-cyan/30 transition-all cursor-pointer bg-slate-900/20">
-                      <div className="p-5 rounded-2xl bg-studio-cyan/10 group-hover:scale-110 transition-transform">
+                   <input 
+                     type="file" 
+                     id="script-file-upload" 
+                     className="hidden" 
+                     accept="video/*"
+                     onChange={handleFileChange}
+                   />
+                   <div 
+                     onClick={() => document.getElementById('script-file-upload')?.click()}
+                     className={`border-2 border-dashed rounded-2xl p-10 md:p-16 flex flex-col items-center justify-center text-center space-y-5 group transition-all cursor-pointer ${selectedFile ? 'border-studio-cyan/50 bg-studio-cyan/5' : 'border-studio-border bg-slate-900/20 hover:border-studio-cyan/30'}`}
+                   >
+                      <div className={`p-5 rounded-2xl transition-transform ${selectedFile ? 'bg-studio-cyan/20 scale-110' : 'bg-studio-cyan/10 group-hover:scale-110'}`}>
                          <Video className="w-10 h-10 text-studio-cyan" />
                       </div>
                       <div className="space-y-1">
-                         <p className="text-sm font-black text-white uppercase tracking-widest">Transmit Source Asset</p>
-                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">Direct upload for context-aware script synthesis</p>
+                         <p className="text-sm font-black text-white uppercase tracking-widest">
+                           {selectedFile ? selectedFile.name : 'Transmit Source Asset'}
+                         </p>
+                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
+                           {selectedFile ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Ready for Synthesis` : 'Direct upload for context-aware script synthesis'}
+                         </p>
                       </div>
+                      {selectedFile && (
+                         <button 
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             setSelectedFile(null);
+                           }}
+                           className="text-[8px] font-black text-red-500 uppercase tracking-widest hover:underline"
+                         >
+                           Remove Anchor
+                         </button>
+                       )}
                       <p className="text-[8px] text-slate-600 font-black uppercase tracking-[0.2em] pt-2">MP4 • MOV • AVI • Target limit: 500MB</p>
                    </div>
                 </div>
@@ -290,9 +328,9 @@ export function ScriptForge() {
                      <div className="p-4 bg-slate-950/80 rounded-xl border border-studio-border/50">
                         <p className="text-[9px] font-black uppercase tracking-widest text-studio-cyan mb-2">[ GENERATED SCRIPT PREVIEW ]</p>
                         <div className="max-h-96 overflow-y-auto custom-scrollbar pr-2">
-                           <p className="text-[11px] text-slate-300 font-medium leading-relaxed whitespace-pre-wrap">
-                              {generatedScript}
-                           </p>
+                           <div className="markdown-body script-result text-[11px] text-slate-300">
+                              <ReactMarkdown>{generatedScript}</ReactMarkdown>
+                           </div>
                         </div>
                      </div>
                      <div className="flex gap-2">

@@ -27,16 +27,7 @@ import { generateCreativeContent } from '../services/geminiService';
 
 const CREATION_TOOLS = [
   { id: 'full_production', icon: Zap, title: 'MASTER FULL PRODUCTION', desc: 'Auto-generate Scene-by-Scene Script, Image/Video Prompts, & SEO in one click.', isNew: true },
-  { id: 'thumbnail_prompt', icon: Camera, title: 'THUMBNAIL PROMPT', desc: 'Generate hyper-realistic AI prompts for high-CTR thumbnails.', isNew: true },
-  { id: 'image', icon: PenTool, title: 'AI IMAGE PROMPT', desc: 'Generate high quality prompts for AI image generation.' },
   { id: 'video', icon: Video, title: 'AI VIDEO PROMPT', desc: 'Create cinematic video prompts using AI models.', isNew: true },
-  { id: 'thumbnail', icon: Smile, title: 'THUMBNAIL IDEA', desc: 'Unique and catchy thumbnail concepts for your content.' },
-  { id: 'description', icon: FileText, title: 'VIDEO DESCRIPTION', desc: 'SEO optimized video descriptions that rank.' },
-  { id: 'tags', icon: Hash, title: 'SEO TAGS', desc: 'Get viral and SEO friendly tags for your videos.' },
-  { id: 'script', icon: Play, title: 'FULL YOUTUBE SCRIPT', desc: 'AI generates complete scripts for your videos.' },
-  { id: 'bio', icon: Hash, title: 'YOUTUBER BIO GENERATOR', desc: 'Create engaging bios that grow your channel.' },
-  { id: 'keyword', icon: Search, title: 'KEYWORD RESEARCH TOOL', desc: 'Find high volume and low competition keywords.' },
-  { id: 'ideas', icon: Lightbulb, title: 'CONTENT IDEA GENERATOR', desc: 'Discover trending and profitable content ideas.' },
 ];
 
 export function Dashboard() {
@@ -175,24 +166,7 @@ export function Dashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-               <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
-                <Layout className="w-3 h-3" /> Template Presets
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {['TUTORIAL', 'REVIEW', 'VLOG', 'SHORTS'].map((preset) => (
-                  <button 
-                    key={preset} 
-                    onClick={() => setSelectedPreset(preset)}
-                    className={`btn-secondary h-10 md:h-12 uppercase text-[10px] tracking-widest font-black transition-all ${selectedPreset === preset ? 'cyan-border-active bg-studio-cyan/10 text-studio-cyan' : ''}`}
-                  >
-                    {preset}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
+          <div className="grid grid-cols-1 gap-6">
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
                 <Globe className="w-3 h-3" /> Select Output Language

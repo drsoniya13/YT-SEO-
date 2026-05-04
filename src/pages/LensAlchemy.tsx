@@ -18,22 +18,38 @@ import {
 import { StatCard, PanelHeader, GlowingButton, NeuralLoadingOverlay } from '../components/Common';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { processLensAlchemy } from '../services/geminiService';
+import ReactMarkdown from 'react-markdown';
 
 export function LensAlchemy() {
   const [selectedRatio, setSelectedRatio] = useState('16:9');
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showOutput, setShowOutput] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [generationResult, setGenerationResult] = useState('');
 
-  const handleGenerate = () => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleGenerate = async () => {
     if (!prompt) return;
     setIsGenerating(true);
     setShowOutput(false);
     
-    setTimeout(() => {
+    try {
+      const result = await processLensAlchemy(prompt, selectedFile?.name);
+      setGenerationResult(result);
       setIsGenerating(false);
       setShowOutput(true);
-    }, 2500);
+    } catch (error) {
+      console.error(error);
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -100,16 +116,41 @@ export function LensAlchemy() {
 
              <div className="space-y-4">
                 <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-3">
-                  <Upload className="w-3 h-3 md:w-4 md:h-4" /> IMAGE REFERENCE / INIT-IMAGE
+                   <Upload className="w-3 h-3 md:w-4 md:h-4" /> IMAGE REFERENCE / INIT-IMAGE
                 </label>
-                <div className="border-2 border-dashed border-studio-border rounded-2xl p-10 flex flex-col items-center justify-center text-center space-y-4 group hover:border-studio-cyan/30 transition-all cursor-pointer bg-slate-900/20">
-                   <div className="p-5 rounded-2xl bg-studio-cyan/10 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,229,255,0.1)]">
+                <input 
+                  type="file" 
+                  id="lens-file-upload" 
+                  className="hidden" 
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+                <div 
+                  onClick={() => document.getElementById('lens-file-upload')?.click()}
+                  className={`border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center space-y-4 group transition-all cursor-pointer ${selectedFile ? 'border-studio-cyan/50 bg-studio-cyan/5' : 'border-studio-border bg-slate-900/20 hover:border-studio-cyan/30'}`}
+                >
+                   <div className={`p-5 rounded-2xl transition-transform shadow-[0_0_20px_rgba(0,229,255,0.1)] ${selectedFile ? 'bg-studio-cyan/20 scale-110' : 'bg-studio-cyan/10 group-hover:scale-110'}`}>
                       <Upload className="w-8 h-8 text-studio-cyan" />
                    </div>
                    <div className="space-y-1">
-                      <p className="text-xs font-bold text-white uppercase tracking-wider">Upload Reference Asset</p>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest pt-2">Max Payload: 10MB • JPG, PNG, WEBP</p>
+                      <p className="text-xs font-bold text-white uppercase tracking-wider">
+                        {selectedFile ? selectedFile.name : 'Upload Reference Asset'}
+                      </p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest pt-2">
+                        {selectedFile ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • JPG, PNG, WEBP` : 'Max Payload: 10MB • JPG, PNG, WEBP'}
+                      </p>
                    </div>
+                   {selectedFile && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedFile(null);
+                        }}
+                        className="text-[8px] font-black text-red-500 uppercase tracking-widest hover:underline"
+                      >
+                        Remove Reference
+                      </button>
+                    )}
                 </div>
              </div>
 
@@ -181,13 +222,15 @@ export function LensAlchemy() {
                   </motion.div>
                 ) : (
                   <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     className="space-y-6"
                   >
-                     <div className="w-full aspect-square max-w-[280px] mx-auto bg-slate-900 rounded-3xl border border-studio-cyan/30 flex items-center justify-center overflow-hidden relative group">
-                        <div className="absolute inset-0 bg-linear-to-b from-transparent to-studio-cyan/20" />
-                        <Zap className="w-20 h-20 text-studio-cyan opacity-40" />
+                     <div className="w-full min-h-[280px] mx-auto bg-slate-900 rounded-3xl border border-studio-cyan/30 p-6 overflow-hidden relative group text-left">
+                        <div className="absolute top-0 right-0 p-4 opacity-20"><Zap className="w-12 h-12 text-studio-cyan" /></div>
+                        <div className="markdown-body alchemy-result text-[10px] text-slate-300">
+                           <ReactMarkdown>{generationResult}</ReactMarkdown>
+                        </div>
                         
                         <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                            <div className="flex gap-2">
@@ -197,10 +240,10 @@ export function LensAlchemy() {
                         </div>
                      </div>
                      <div className="space-y-3">
-                        <p className="text-[10px] text-studio-cyan font-black uppercase tracking-widest">Asset Ready: Visual_Hash_{Math.floor(Math.random() * 9999)}</p>
+                        <p className="text-[10px] text-studio-cyan font-black uppercase tracking-widest">Asset Parameters Compiled</p>
                         <div className="flex gap-2 justify-center">
                           <button onClick={() => setShowOutput(false)} className="btn-secondary h-10 px-4 text-[10px] tracking-widest font-black uppercase"><Trash2 className="w-3.5 h-3.5 mr-2" /> Discard</button>
-                          <button className="btn-primary h-10 px-6 text-[10px] tracking-widest font-black uppercase">Export 4K</button>
+                          <button className="btn-primary h-10 px-6 text-[10px] tracking-widest font-black uppercase">Initialize Forge</button>
                         </div>
                      </div>
                   </motion.div>

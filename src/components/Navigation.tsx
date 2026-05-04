@@ -134,19 +134,6 @@ export function Sidebar({ currentPage, setCurrentPage, isOpen, setIsOpen, isMobi
         </nav>
 
         <div className="p-4 space-y-4">
-          <div className="bg-linear-to-b from-studio-purple/20 to-transparent p-4 rounded-xl border border-studio-purple/30">
-             <div className="flex items-center gap-2 mb-2 text-studio-purple">
-               <Zap className="w-4 h-4" />
-               <span className="text-xs font-bold uppercase tracking-wider">Unlock Pro Studio</span>
-             </div>
-             {(isOpen || isMobile) && (
-               <p className="text-[10px] text-slate-400 mb-3">Get unlimited access to all tools and premium features.</p>
-             )}
-             <button className="w-full bg-linear-to-r from-blue-600 to-cyan-500 text-white text-[10px] font-bold py-2 rounded-lg shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
-               Upgrade Now
-             </button>
-          </div>
-
           <div className="space-y-4">
             <div className="flex flex-col gap-2">
               <button className="flex items-center gap-3 p-2 text-slate-400 hover:text-slate-200 transition-colors">

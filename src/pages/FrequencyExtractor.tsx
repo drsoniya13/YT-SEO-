@@ -18,31 +18,52 @@ import {
 import { StatCard, PanelHeader, GlowingButton, NeuralLoadingOverlay } from '../components/Common';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { processFrequencyExtraction } from '../services/geminiService';
+import ReactMarkdown from 'react-markdown';
 
 export function FrequencyExtractor() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [selectedLang, setSelectedLang] = useState('Bengali');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [extractionResult, setExtractionResult] = useState('');
 
-  const startExtraction = () => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const startExtraction = async () => {
+    if (!selectedFile) {
+      alert('Please upload a source signal first.');
+      return;
+    }
     setIsProcessing(true);
     setProgress(0);
     setShowResult(false);
 
+    // Dynamic progress simulation linked to API call period
     const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsProcessing(false);
-            setShowResult(true);
-          }, 500);
-          return 100;
-        }
-        return prev + 1;
-      });
-    }, 20);
+      setProgress(prev => (prev >= 90 ? 90 : prev + 2));
+    }, 100);
+
+    try {
+      const result = await processFrequencyExtraction(selectedFile.name, selectedLang);
+      setExtractionResult(result);
+      clearInterval(interval);
+      setProgress(100);
+      
+      setTimeout(() => {
+        setIsProcessing(false);
+        setShowResult(true);
+      }, 500);
+    } catch (error) {
+      console.error(error);
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -91,14 +112,39 @@ export function FrequencyExtractor() {
                 <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
                   <Upload className="w-3 h-3" /> SOURCE SIGNAL ACQUISITION
                 </label>
-                <div className="border-2 border-dashed border-studio-border rounded-2xl p-10 md:p-16 flex flex-col items-center justify-center text-center space-y-5 group hover:border-studio-cyan/30 transition-all cursor-pointer bg-slate-900/20">
-                   <div className="p-6 rounded-2xl bg-studio-cyan/10 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,229,255,0.05)]">
+                <input 
+                  type="file" 
+                  id="frequency-file-upload" 
+                  className="hidden" 
+                  accept="audio/*,video/*"
+                  onChange={handleFileChange}
+                />
+                <div 
+                  onClick={() => document.getElementById('frequency-file-upload')?.click()}
+                  className={`border-2 border-dashed rounded-2xl p-10 md:p-16 flex flex-col items-center justify-center text-center space-y-5 group transition-all cursor-pointer ${selectedFile ? 'border-studio-cyan/50 bg-studio-cyan/5' : 'border-studio-border bg-slate-900/20 hover:border-studio-cyan/30'}`}
+                >
+                   <div className={`p-6 rounded-2xl transition-transform shadow-[0_0_20px_rgba(0,229,255,0.05)] ${selectedFile ? 'bg-studio-cyan/20 scale-110' : 'bg-studio-cyan/10 group-hover:scale-110'}`}>
                       <AudioLines className={`w-10 h-10 text-studio-cyan ${isProcessing ? 'animate-pulse' : ''}`} />
                    </div>
                    <div className="space-y-2">
-                      <p className="text-sm font-black text-white uppercase tracking-widest leading-none">Initialize Signal Push</p>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">Drag and drop audio/video stream for frequency analysis</p>
+                      <p className="text-sm font-black text-white uppercase tracking-widest leading-none">
+                        {selectedFile ? selectedFile.name : 'Initialize Signal Push'}
+                      </p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
+                        {selectedFile ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Ready for Analysis` : 'Drag and drop audio/video stream for frequency analysis'}
+                      </p>
                    </div>
+                   {selectedFile && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedFile(null);
+                        }}
+                        className="text-[8px] font-black text-red-500 uppercase tracking-widest hover:underline"
+                      >
+                        Remove Asset
+                      </button>
+                    )}
                    <div className="pt-4 space-y-1 text-[8px] font-black text-slate-600 uppercase tracking-[0.2em]">
                       <p>MP3 • WAV • MP4 • MOV • M4A</p>
                       <p>Payload Limit: 200MB / Packet</p>
@@ -151,14 +197,12 @@ export function FrequencyExtractor() {
                     </div>
                   </div>
 
-                  <div className="bg-slate-950/80 p-4 rounded-xl border border-studio-border/50 font-mono text-[10px] text-slate-400 space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+                  <div className="bg-slate-950/80 p-4 rounded-xl border border-studio-border/50 font-mono text-[10px] text-slate-400 space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
                      <p className="text-studio-cyan opacity-80 uppercase tracking-widest mb-2">[ SIGNAL RECONSTRUCTION LOG ]</p>
-                     <p>&gt; Analyzing frequency bands 0-22kHz...</p>
-                     <p>&gt; Noise reduction active (88% efficiency)</p>
-                     <p>&gt; Segmenting vocal clusters...</p>
-                     <p>&gt; Language identified: {selectedLang}</p>
-                     <p>&gt; Mapping semantic metadata...</p>
-                     <p className="text-white">&gt; Result successfully compiled to bitstream AX-8801.</p>
+                     <div className="markdown-body frequency-result text-slate-300">
+                        <ReactMarkdown>{extractionResult}</ReactMarkdown>
+                     </div>
+                     <p className="text-white pt-4 border-t border-slate-900">&gt; Result successfully compiled to bitstream AX-8801.</p>
                   </div>
                </motion.div>
             )}
