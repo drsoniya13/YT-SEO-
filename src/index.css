@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-studio-bg: #020617;
+  --color-studio-sidebar: #01040a;
+  --color-studio-card: #0f172a88;
+  --color-studio-cyan: #00e5ff;
+  --color-studio-cyan-dim: #00e5ff33;
+  --color-studio-purple: #7c3aed;
+  --color-studio-border: #1e293b;
+  
+  --radius-studio: 0.75rem;
+}
+
+@layer base {
+  body {
+    @apply bg-studio-bg text-slate-300 font-sans antialiased selection:bg-studio-cyan/30;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-studio-bg;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-800 rounded-full hover:bg-slate-700 transition-colors;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-studio-card backdrop-blur-md border border-studio-border rounded-studio;
+  }
+  
+  .cyan-glow {
+    @apply shadow-[0_0_15px_rgba(0,229,255,0.15)];
+  }
+  
+  .cyan-border-active {
+    @apply border-studio-cyan shadow-[0_0_10px_rgba(0,229,255,0.2)];
+  }
+
+  .btn-primary {
+    @apply bg-linear-to-r from-studio-cyan/80 to-studio-cyan text-slate-950 font-bold px-6 py-2.5 rounded-studio hover:opacity-90 transition-all active:scale-[0.98] flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply bg-slate-800/50 hover:bg-slate-800 border border-studio-border text-slate-300 font-medium px-4 py-2 rounded-studio transition-all active:scale-[0.98] flex items-center justify-center gap-2;
+  }
+}
