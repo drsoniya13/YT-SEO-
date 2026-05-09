@@ -22,13 +22,13 @@ import React from 'react';
 import { GoogleGenAI, Modality } from "@google/genai";
 
 const VOICES = [
-  // Bengali (BD)
-  { id: 'mila', name: 'Mila (Neural)', type: 'Female', desc: 'Studio Quality • Natural BD', gender: 'female', lang: 'bn-BD', geminiVoice: 'Kore' },
-  { id: 'sumi', name: 'Sumi (Sweet)', type: 'Female', desc: 'Warm & Expressive Tone', gender: 'female', lang: 'bn-BD', geminiVoice: 'Kore' },
-  { id: 'nabila', name: 'Nabila (Vlog)', type: 'Female', desc: 'Natural & Energetic', gender: 'female', lang: 'bn-BD', geminiVoice: 'Zephyr' },
-  { id: 'arif', name: 'Arif (Vlog)', type: 'Male', desc: 'Youthful & Energetic', gender: 'male', lang: 'bn-BD', geminiVoice: 'Puck' },
-  { id: 'tanvir', name: 'Tanvir (Deep)', type: 'Male', desc: 'Authoritative & Deep', gender: 'male', lang: 'bn-IN', geminiVoice: 'Charon' },
-  { id: 'rahat', name: 'Rahat (Doc)', type: 'Male', desc: 'Documentary Style Tone', gender: 'male', lang: 'bn-BD', geminiVoice: 'Fenrir' },
+  // Bengali (BD) - Focused on Pure Bangladeshi Accents
+  { id: 'mila', name: 'Mila (News Pro)', type: 'Female', desc: 'Authoritative • Clear BD Accent', gender: 'female', lang: 'bn-BD', geminiVoice: 'Kore' },
+  { id: 'sumi', name: 'Sumi (Storyteller)', type: 'Female', desc: 'Empathetic • Natural Flowing', gender: 'female', lang: 'bn-BD', geminiVoice: 'Kore' },
+  { id: 'nabila', name: 'Nabila (Vlog Pro)', type: 'Female', desc: 'Energetic • High Retention', gender: 'female', lang: 'bn-BD', geminiVoice: 'Zephyr' },
+  { id: 'arif', name: 'Arif (Marketing)', type: 'Male', desc: 'Youthful • Dynamic BD Tone', gender: 'male', lang: 'bn-BD', geminiVoice: 'Puck' },
+  { id: 'tanvir', name: 'Tanvir (Corporate)', type: 'Male', desc: 'Professional • Trustworthy', gender: 'male', lang: 'bn-BD', geminiVoice: 'Charon' },
+  { id: 'rahat', name: 'Rahat (Documentary)', type: 'Male', desc: 'Deep • Rich Cinematic BD', gender: 'male', lang: 'bn-BD', geminiVoice: 'Fenrir' },
 
   // English (EN)
   { id: 'james', name: 'James (Studio)', type: 'Male', desc: 'Professional • Studio', gender: 'male', lang: 'en-US', geminiVoice: 'Puck' },
@@ -44,19 +44,14 @@ export function VocalSynthesis() {
   const [text, setText] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showOutput, setShowOutput] = useState(false);
-  const [speed, setSpeed] = useState(1.0);
-  const [quality, setQuality] = useState('High (Studio Grade)');
-  const [exportFormat, setExportFormat] = useState('mp3');
-  const [bitrate, setBitrate] = useState('320');
   const [expression, setExpression] = useState('Balanced');
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [previewVolume, setPreviewVolume] = useState(0.8);
+  const [previewVolume] = useState(0.8);
   const [activeGender, setActiveGender] = useState<'all' | 'male' | 'female'>('all');
   const [activeLang, setActiveLang] = useState<'all' | 'bn' | 'en' | 'hi'>('all');
   const [generatedAudio, setGeneratedAudio] = useState<string | null>(null);
   
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const filteredVoices = VOICES.filter(v => {
     const genderMatch = activeGender === 'all' || v.gender === activeGender;
@@ -65,9 +60,10 @@ export function VocalSynthesis() {
   });
 
   const stopAudio = () => {
-    if (sourceRef.current) {
-      sourceRef.current.stop();
-      sourceRef.current = null;
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current = null;
     }
     setIsSpeaking(false);
   };
@@ -76,10 +72,6 @@ export function VocalSynthesis() {
     try {
       stopAudio();
       
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-      }
-      
       const binaryString = atob(base64Data);
       const len = binaryString.length;
       const bytes = new Uint8Array(len);
@@ -87,23 +79,53 @@ export function VocalSynthesis() {
         bytes[i] = binaryString.charCodeAt(i);
       }
       
-      const audioBuffer = await audioContextRef.current.decodeAudioData(bytes.buffer);
-      const source = audioContextRef.current.createBufferSource();
-      source.buffer = audioBuffer;
+      // Gemini TTS returns raw 16-bit PCM at 24kHz. Wrap it in a WAV header for browser support.
+      const wavHeader = new ArrayBuffer(44);
+      const view = new DataView(wavHeader);
       
-      const gainNode = audioContextRef.current.createGain();
-      gainNode.gain.value = previewVolume;
-      
-      source.connect(gainNode);
-      gainNode.connect(audioContextRef.current.destination);
-      
-      source.onended = () => {
-        setIsSpeaking(false);
+      const writeString = (offset: number, string: string) => {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
       };
       
-      source.start(0);
-      sourceRef.current = source;
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + len, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // PCM - integer
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, 24000, true); // Sample rate
+      view.setUint32(28, 24000 * 2, true); // Byte rate
+      view.setUint16(32, 2, true); // Block align
+      view.setUint16(34, 16, true); // Bits per sample
+      writeString(36, 'data');
+      view.setUint32(40, len, true);
+      
+      const combined = new Uint8Array(44 + len);
+      combined.set(new Uint8Array(wavHeader), 0);
+      combined.set(bytes, 44);
+      
+      const blob = new Blob([combined], { type: 'audio/wav' });
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.volume = previewVolume;
+      
+      audio.onended = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+      };
+      
+      audio.onerror = (e) => {
+        console.error("Neural playback error:", e);
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+      };
+
+      audioRef.current = audio;
       setIsSpeaking(true);
+      await audio.play();
     } catch (error) {
       console.error("Error playing neural audio:", error);
       setIsSpeaking(false);
@@ -124,13 +146,23 @@ export function VocalSynthesis() {
       const langName = voiceProfile.lang.startsWith('bn') ? 'Bengali (Bangladeshi)' : 
                        voiceProfile.lang.startsWith('hi') ? 'Hindi' : 'English';
 
-      // Advanced prompt engineering for accent and character control
-      const prompt = `Act as a professional voice artist. Speak the following text in a ${voiceProfile.gender} ${langName} voice. 
-      Persona: ${voiceProfile.desc}
-      Style: ${expression}
-      Accent: ${langName === 'Bengali (Bangladeshi)' ? 'Perfect Standard Bangladeshi (Bengali)' : 'Natural'}
+      // Ultra-advanced prompt for 100% human realistic performance
+      const countryContext = voiceProfile.lang.startsWith('bn') ? 'Bangladesh' : 
+                            voiceProfile.lang.startsWith('hi') ? 'India (Hindi)' : 'US/UK (English)';
       
-      TEXT TO SPEAK:
+      const accentContext = voiceProfile.lang.startsWith('bn') ? 'PERFECT Standard Bangladeshi (BD) accent. Completely avoid any Indian Bengali (Kolkata) accent or intonation.' : 
+                           voiceProfile.lang.startsWith('hi') ? 'Natural and native Hindi accent (North India). Avoid any robotic or formal monotony.' : 'Natural and native English accent.';
+
+      const prompt = `Act as an elite human voice-over artist from ${countryContext}. 
+      Speak the following text in a ${voiceProfile.gender} voice with a ${accentContext}
+      
+      CRITICAL INSTRUCTIONS:
+      1. VOID ALL ROBOTIC TONES. Use natural breathing, micro-pauses, and human emotional inflections.
+      2. REALISM: Focus on 100% human-like delivery. Use a conversational and highly engaging tone to maximize audience retention.
+      3. PERSONA: ${voiceProfile.desc}
+      4. STYLE: ${expression}
+      
+      TEXT TO SYNTHESIZE:
       ${content}`;
 
       const response = await ai.models.generateContent({
@@ -179,7 +211,7 @@ export function VocalSynthesis() {
       if (voice?.lang.startsWith('en')) {
         demoText = "Hello, I can create professional voice overs for your videos.";
       } else if (voice?.lang.startsWith('hi')) {
-        demoText = "नमस्ते, मैं आपके वीडियो के लिए पेशेवर वॉयस ओवर बना सकता हूँ।";
+        demoText = "नमस्ते, मैं आपके वीडियो के लिए पेशेवर वॉयস ओवर बना सकता हूँ।";
       }
       
       generateNeuralVoice(demoText, voiceId, true);
@@ -205,11 +237,38 @@ export function VocalSynthesis() {
     for (let i = 0; i < len; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    const blob = new Blob([bytes], { type: 'audio/wav' }); // Gemini TTS typically returns WAV/PCM
+
+    // Wrap in WAV header for download
+    const wavHeader = new ArrayBuffer(44);
+    const view = new DataView(wavHeader);
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + len, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, 24000, true);
+    view.setUint32(28, 24000 * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, len, true);
+
+    const combined = new Uint8Array(44 + len);
+    combined.set(new Uint8Array(wavHeader), 0);
+    combined.set(bytes, 44);
+
+    const blob = new Blob([combined], { type: 'audio/wav' }); 
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `neural_voice_${selectedVoice}.${exportFormat}`;
+    link.download = `neural_voice_${selectedVoice}.wav`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -296,26 +355,6 @@ export function VocalSynthesis() {
               </div>
 
               <div className="space-y-8">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
-                    <span className="text-slate-400 flex items-center gap-2"><HistoryIcon className="w-3 h-3" /> Speed / Pitch</span>
-                    <span className="text-studio-cyan">x {speed.toFixed(1)}</span>
-                  </div>
-                  <input 
-                    type="range" 
-                    min="0.5" 
-                    max="2.0" 
-                    step="0.1"
-                    value={speed}
-                    onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                    className="w-full accent-studio-cyan h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer" 
-                  />
-                  <div className="flex justify-between text-[8px] font-bold text-slate-500 uppercase tracking-widest">
-                    <span>Slower</span>
-                    <span>Faster</span>
-                  </div>
-                </div>
-
                 <div className="space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                     <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
@@ -423,7 +462,7 @@ export function VocalSynthesis() {
                       onClick={handleDownload}
                       className="btn-secondary h-10 px-6 text-[10px] tracking-widest font-black flex items-center gap-2"
                     >
-                      <Download className="w-4 h-4" /> Export Script
+                      <Download className="w-4 h-4" /> Download Audio
                     </button>
                   </div>
               </motion.div>
