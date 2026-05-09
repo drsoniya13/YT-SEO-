@@ -103,9 +103,9 @@ export default function App() {
                    <div className="w-5 h-5 bg-studio-cyan rounded flex items-center justify-center">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-slate-950"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></svg>
                    </div>
-                   STUDIO
+                   YT Studio
                  </div>
-                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">© 2024 STUDIO AI. All rights reserved.</p>
+                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">© 2024 YT STUDIO AI. All rights reserved.</p>
               </div>
               <div className="flex flex-wrap justify-center gap-4 md:gap-8">
                  <a href="#" className="text-[10px] text-slate-500 hover:text-studio-cyan transition-colors font-bold uppercase tracking-widest">Privacy Policy</a>

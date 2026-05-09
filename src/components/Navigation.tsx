@@ -79,7 +79,7 @@ export function Sidebar({ currentPage, setCurrentPage, isOpen, setIsOpen, isMobi
                   exit={{ opacity: 0, x: -10 }}
                   className="text-xl font-bold tracking-tighter text-white"
                 >
-                  STUDIO
+                  YT Studio
                 </motion.span>
               )}
             </AnimatePresence>
@@ -178,7 +178,7 @@ export function Header({ currentPage, theme, onMenuClick }: HeaderProps) {
         <div className="flex flex-col">
           <div className="flex items-center gap-2 text-[8px] md:text-[10px] uppercase tracking-widest text-studio-cyan font-bold leading-none">
             <Zap className="w-2.5 h-2.5 md:w-3 h-3" />
-            {isManualApi ? 'Manual Processing Active' : 'Live Processing Studio'}
+            {isManualApi ? 'Manual Processing Active' : 'Live Processing YT Studio'}
           </div>
           <h1 className="text-base md:text-2xl font-bold text-white tracking-wide uppercase leading-tight">
             {currentPage === 'Dashboard' ? 'Dashboard Overview' : currentPage}

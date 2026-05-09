@@ -21,7 +21,7 @@ export function Settings() {
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
   const [activeTab, setActiveTab] = useState('Account');
-  const [apiKey, setApiKey] = useState('STUDIO_LIVE_SK_8829...01');
+  const [apiKey, setApiKey] = useState('YT_STUDIO_LIVE_SK_8829...01');
   const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   const [notifications, setNotifications] = useState<string[]>(['email', 'push']);
 
@@ -109,11 +109,11 @@ export function Settings() {
                         </div>
                         <div className="space-y-2">
                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Email Address</label>
-                           <input type="email" defaultValue="arifur@studio.ai" className="w-full bg-slate-950 border border-studio-border rounded-xl h-12 px-4 text-xs font-bold text-white outline-none focus:border-studio-cyan/50 transition-all" />
+                           <input type="email" defaultValue="arifur@ytstudio.ai" className="w-full bg-slate-950 border border-studio-border rounded-xl h-12 px-4 text-xs font-bold text-white outline-none focus:border-studio-cyan/50 transition-all" />
                         </div>
                      </div>
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Studio Workspace Bio</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">YT Studio Workspace Bio</label>
                         <textarea placeholder="Tell us about your creative journey..." className="w-full h-32 bg-slate-950 border border-studio-border rounded-xl p-4 text-xs font-medium text-white outline-none focus:border-studio-cyan/50 transition-all resize-none" />
                      </div>
                   </div>
@@ -161,7 +161,7 @@ export function Settings() {
 
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Manual Gemini API Key (Optional)</label>
-                        <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-2 italic">If provided, this key will be used instead of the default studio key. Get it from <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-studio-cyan underline">Google AI Studio</a>.</p>
+                        <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-2 italic">If provided, this key will be used instead of the default YT studio key. Get it from <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-studio-cyan underline">Google AI Studio</a>.</p>
                         <div className="flex gap-2">
                            <input 
                              type="password" 
@@ -174,7 +174,7 @@ export function Settings() {
                       </div>
 
                       <div className="pt-4 border-t border-slate-800 space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Live Studio Secret Key</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Live YT Studio Secret Key</label>
                         <div className="flex gap-2">
                            <input 
                              type="password" 
@@ -202,7 +202,7 @@ export function Settings() {
                 <div className="pt-8 border-t border-slate-800 flex items-center justify-between">
                    <div className="flex items-center gap-2 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
                       <Zap className="w-3 h-3" />
-                      Studio Engine V2.4.8
+                      YT Studio Engine V2.4.8
                    </div>
                    <div className="flex gap-3">
                       <button className="btn-secondary h-11 px-8 text-[10px] font-black uppercase tracking-[0.2em] opacity-50 hover:opacity-100 transition-opacity">Discard Changes</button>
@@ -240,7 +240,7 @@ export function Settings() {
         {/* Pro Banner */}
         <div className="glass-panel p-8 bg-linear-to-r from-blue-600/10 to-studio-cyan/20 border-studio-cyan/30 flex flex-col md:flex-row items-center justify-between gap-8">
            <div className="space-y-2 text-center md:text-left">
-              <h3 className="text-xl font-black uppercase tracking-widest text-white italic">Level Up to <span className="text-studio-cyan">Studio Pro</span></h3>
+              <h3 className="text-xl font-black uppercase tracking-widest text-white italic">Level Up to <span className="text-studio-cyan">YT Studio Pro</span></h3>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] leading-relaxed">
                 Unlock multi-model synthesis, 4K exports, and unlimited API throughput.
               </p>
