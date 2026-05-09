@@ -150,7 +150,7 @@ export function Dashboard() {
               </label>
               <div className="bg-studio-cyan/10 border border-studio-cyan/20 px-2 py-0.5 rounded flex items-center gap-1 mb-1">
                 <div className="w-1.5 h-1.5 bg-studio-cyan rounded-full animate-pulse" />
-                <span className="text-[8px] font-black text-studio-cyan tracking-widest uppercase">REAL BD TONE ENABLED</span>
+                <span className="text-[8px] font-black text-studio-cyan tracking-widest uppercase">PREMIUM BD NEURAL ENGINE V2</span>
               </div>
             </div>
             <div className="relative group">

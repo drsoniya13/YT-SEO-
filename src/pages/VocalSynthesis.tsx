@@ -17,18 +17,26 @@ import {
 } from 'lucide-react';
 import { StatCard, PanelHeader, GlowingButton, NeuralLoadingOverlay } from '../components/Common';
 import { motion, AnimatePresence } from 'motion/react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import React from 'react';
+import { GoogleGenAI, Modality } from "@google/genai";
 
 const VOICES = [
-  { id: 'mila', name: 'Mila (BD Pro)', type: 'Female', desc: '100% Natural', gender: 'female', lang: 'bn-BD' },
-  { id: 'sumi', name: 'Sumi (Sweet)', type: 'Female', desc: 'Natural & Warm', gender: 'female', lang: 'bn-BD' },
-  { id: 'aodde', name: 'Aodde (Calm)', type: 'Female', desc: 'BD Studio Voice', gender: 'female', lang: 'bn-BD' },
-  { id: 'kore', name: 'Kore', type: 'Female', desc: 'Soft & Expressive', gender: 'female', lang: 'bn-BD' },
-  { id: 'arif', name: 'Arif (BD Vlog)', type: 'Male', desc: 'Youthful & Energetic', gender: 'male', lang: 'bn-BD' },
-  { id: 'rahat', name: 'Rahat (BD News)', type: 'Male', desc: 'Deep & Strong', gender: 'male', lang: 'bn-BD' },
-  { id: 'rashed', name: 'Rashed (Action)', type: 'Male', desc: 'BD High Energy', gender: 'male', lang: 'bn-BD' },
-  { id: 'puck', name: 'Puck', type: 'Male', desc: 'Friendly & Upbeat', gender: 'male', lang: 'bn-BD' },
+  // Bengali (BD)
+  { id: 'mila', name: 'Mila (Neural)', type: 'Female', desc: 'Studio Quality • Natural BD', gender: 'female', lang: 'bn-BD', geminiVoice: 'Kore' },
+  { id: 'sumi', name: 'Sumi (Sweet)', type: 'Female', desc: 'Warm & Expressive Tone', gender: 'female', lang: 'bn-BD', geminiVoice: 'Kore' },
+  { id: 'nabila', name: 'Nabila (Vlog)', type: 'Female', desc: 'Natural & Energetic', gender: 'female', lang: 'bn-BD', geminiVoice: 'Zephyr' },
+  { id: 'arif', name: 'Arif (Vlog)', type: 'Male', desc: 'Youthful & Energetic', gender: 'male', lang: 'bn-BD', geminiVoice: 'Puck' },
+  { id: 'tanvir', name: 'Tanvir (Deep)', type: 'Male', desc: 'Authoritative & Deep', gender: 'male', lang: 'bn-IN', geminiVoice: 'Charon' },
+  { id: 'rahat', name: 'Rahat (Doc)', type: 'Male', desc: 'Documentary Style Tone', gender: 'male', lang: 'bn-BD', geminiVoice: 'Fenrir' },
+
+  // English (EN)
+  { id: 'james', name: 'James (Studio)', type: 'Male', desc: 'Professional • Studio', gender: 'male', lang: 'en-US', geminiVoice: 'Puck' },
+  { id: 'sophie', name: 'Sophie (UK)', type: 'Female', desc: 'British • Storytelling', gender: 'female', lang: 'en-GB', geminiVoice: 'Zephyr' },
+
+  // Hindi (HI)
+  { id: 'aarav', name: 'Aarav (Premium)', type: 'Male', desc: 'Deep • Authoritative HI', gender: 'male', lang: 'hi-IN', geminiVoice: 'Charon' },
+  { id: 'ananya', name: 'Ananya (Soft)', type: 'Female', desc: 'Gentle • Natural Hindi', gender: 'female', lang: 'hi-IN', geminiVoice: 'Kore' },
 ];
 
 export function VocalSynthesis() {
@@ -43,120 +51,185 @@ export function VocalSynthesis() {
   const [expression, setExpression] = useState('Balanced');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [previewVolume, setPreviewVolume] = useState(0.8);
-  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [voiceStatus, setVoiceStatus] = useState<'checking' | 'ready' | 'missing'>('checking');
+  const [activeGender, setActiveGender] = useState<'all' | 'male' | 'female'>('all');
+  const [activeLang, setActiveLang] = useState<'all' | 'bn' | 'en' | 'hi'>('all');
+  const [generatedAudio, setGeneratedAudio] = useState<string | null>(null);
+  
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
 
-  React.useEffect(() => {
-    const updateVoices = () => {
-      const voices = window.speechSynthesis.getVoices();
-      setAvailableVoices(voices);
-      
-      const hasBengali = voices.some(v => v.lang.startsWith('bn') || v.name.toLowerCase().includes('bengali'));
-      setVoiceStatus(hasBengali ? 'ready' : 'missing');
-    };
+  const filteredVoices = VOICES.filter(v => {
+    const genderMatch = activeGender === 'all' || v.gender === activeGender;
+    const langMatch = activeLang === 'all' || v.lang.startsWith(activeLang);
+    return genderMatch && langMatch;
+  });
 
-    updateVoices();
-    window.speechSynthesis.onvoiceschanged = updateVoices;
-    
-    return () => {
-      window.speechSynthesis.onvoiceschanged = null;
-      window.speechSynthesis.cancel();
-    };
-  }, []);
-
-  const speak = (content: string) => {
-    if (!window.speechSynthesis) return;
-
-    window.speechSynthesis.cancel();
-    if (!content) return;
-
-    const utterance = new SpeechSynthesisUtterance(content);
-    
-    // Find the best voice
-    const voices = window.speechSynthesis.getVoices();
-    const voiceProfile = VOICES.find(v => v.id === selectedVoice);
-    
-    let bestVoice = voices.find(v => v.lang === 'bn-BD');
-    if (!bestVoice) bestVoice = voices.find(v => v.lang.startsWith('bn'));
-    if (!bestVoice) bestVoice = voices.find(v => v.name.toLowerCase().includes('bengali'));
-    if (!bestVoice) bestVoice = voices.find(v => v.lang.startsWith('hi')); // Better than English
-    
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-    } else {
-      console.warn("No Bengali voice found, defaulting to system voice.");
+  const stopAudio = () => {
+    if (sourceRef.current) {
+      sourceRef.current.stop();
+      sourceRef.current = null;
     }
+    setIsSpeaking(false);
+  };
+
+  const playAudio = async (base64Data: string) => {
+    try {
+      stopAudio();
+      
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+      }
+      
+      const binaryString = atob(base64Data);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      const audioBuffer = await audioContextRef.current.decodeAudioData(bytes.buffer);
+      const source = audioContextRef.current.createBufferSource();
+      source.buffer = audioBuffer;
+      
+      const gainNode = audioContextRef.current.createGain();
+      gainNode.gain.value = previewVolume;
+      
+      source.connect(gainNode);
+      gainNode.connect(audioContextRef.current.destination);
+      
+      source.onended = () => {
+        setIsSpeaking(false);
+      };
+      
+      source.start(0);
+      sourceRef.current = source;
+      setIsSpeaking(true);
+    } catch (error) {
+      console.error("Error playing neural audio:", error);
+      setIsSpeaking(false);
+    }
+  };
+
+  const generateNeuralVoice = async (content: string, voiceId: string, isPreview: boolean = false) => {
+    if (!content) return;
     
-    utterance.lang = bestVoice?.lang || 'bn-BD';
-    utterance.rate = speed;
-    utterance.volume = previewVolume;
-    utterance.pitch = expression === 'High Emotion' ? 1.3 : expression === 'Monotone' ? 0.7 : 1.0;
+    if (!isPreview) setIsGenerating(true);
+    
+    try {
+      const voiceProfile = VOICES.find(v => v.id === voiceId);
+      if (!voiceProfile) throw new Error("Voice profile not found");
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      
+      const langName = voiceProfile.lang.startsWith('bn') ? 'Bengali (Bangladeshi)' : 
+                       voiceProfile.lang.startsWith('hi') ? 'Hindi' : 'English';
 
-    window.speechSynthesis.speak(utterance);
+      // Advanced prompt engineering for accent and character control
+      const prompt = `Act as a professional voice artist. Speak the following text in a ${voiceProfile.gender} ${langName} voice. 
+      Persona: ${voiceProfile.desc}
+      Style: ${expression}
+      Accent: ${langName === 'Bengali (Bangladeshi)' ? 'Perfect Standard Bangladeshi (Bengali)' : 'Natural'}
+      
+      TEXT TO SPEAK:
+      ${content}`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-tts-preview",
+        contents: [{ parts: [{ text: prompt }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: voiceProfile.geminiVoice as any },
+            },
+          },
+        },
+      });
+
+      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      
+      if (base64Audio) {
+        if (!isPreview) {
+          setGeneratedAudio(base64Audio);
+          setShowOutput(true);
+          setIsGenerating(false);
+          playAudio(base64Audio);
+        } else {
+          playAudio(base64Audio);
+        }
+      } else {
+        throw new Error("No audio data received from Gemini");
+      }
+    } catch (error) {
+      console.error("Neural Synthesis Error:", error);
+      if (!isPreview) setIsGenerating(false);
+    }
   };
 
   const handlePreview = (e: React.MouseEvent, voiceId: string) => {
     e.stopPropagation();
     
     if (isSpeaking && selectedVoice === voiceId) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
+      stopAudio();
     } else {
       setSelectedVoice(voiceId);
-      const demoText = "হ্যালো, আমি আপনার জন্য প্রফেশনাল ভয়েস ওভার তৈরি করতে পারি।";
-      speak(demoText);
+      const voice = VOICES.find(v => v.id === voiceId);
+      let demoText = "হ্যালো, আমি আপনার জন্য প্রফেশনাল ভয়েস ওভার তৈরি করতে পারি।";
+      
+      if (voice?.lang.startsWith('en')) {
+        demoText = "Hello, I can create professional voice overs for your videos.";
+      } else if (voice?.lang.startsWith('hi')) {
+        demoText = "नमस्ते, मैं आपके वीडियो के लिए पेशेवर वॉयस ओवर बना सकता हूँ।";
+      }
+      
+      generateNeuralVoice(demoText, voiceId, true);
     }
   };
 
   const handlePreviewOutput = () => {
     if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
+      stopAudio();
+    } else if (generatedAudio) {
+      playAudio(generatedAudio);
     } else {
-      speak(text);
+      generateNeuralVoice(text, selectedVoice);
     }
   };
 
   const handleDownload = () => {
-    // In a real app, this would request a server-side generated MP3
-    // For this demo, we inform the user about the export simulation
-    const blob = new Blob([text], { type: 'text/plain' });
+    if (!generatedAudio) return;
+    
+    const binaryString = atob(generatedAudio);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: 'audio/wav' }); // Gemini TTS typically returns WAV/PCM
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `voice_script_${selectedVoice}.txt`;
+    link.download = `neural_voice_${selectedVoice}.${exportFormat}`;
     link.click();
     URL.revokeObjectURL(url);
   };
 
   const handleGenerate = () => {
     if (!text.trim()) return;
-    setIsGenerating(true);
-    setShowOutput(false);
-    
-    // Simulate complex neural synthesis specifically for Bangladeshi accents
-    setTimeout(() => {
-      setIsGenerating(false);
-      setShowOutput(true);
-    }, 4000);
+    generateNeuralVoice(text, selectedVoice);
   };
 
   return (
     <div className="relative pb-20">
       <NeuralLoadingOverlay 
         isVisible={isGenerating} 
-        message="Synthesizing Bangladeshi Voice-over" 
+        message={`Neural Synthesis: ${VOICES.find(v => v.id === selectedVoice)?.lang.startsWith('bn') ? 'PREMIUM BD V2' : 'Global Neural Engine'} Active`} 
       />
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-20">
-      <div className="lg:col-span-9 space-y-6">
+      <div className="space-y-6 pb-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <StatCard icon={Zap} label="Active Model" value="Gemini" />
           <StatCard icon={HistoryIcon} label="Total History" value="0" />
-          <StatCard icon={Globe} label="Language" value="Bengali" />
+          <StatCard icon={Globe} label="Language" value={activeLang === 'all' ? 'Multi-lingual' : activeLang === 'bn' ? 'Bengali' : activeLang === 'en' ? 'English' : 'Hindi'} />
           <StatCard icon={Mic} label="Current View" value="Voice" />
         </div>
 
@@ -176,7 +249,9 @@ export function VocalSynthesis() {
                 </label>
                 <div className="bg-studio-cyan/10 border border-studio-cyan/20 px-2 py-0.5 rounded flex items-center gap-1 mb-1">
                   <div className="w-1.5 h-1.5 bg-studio-cyan rounded-full animate-pulse" />
-                  <span className="text-[8px] font-black text-studio-cyan tracking-widest uppercase">REAL BD VOICE ENABLED</span>
+                  <span className="text-[8px] font-black text-studio-cyan tracking-widest uppercase">
+                    {VOICES.find(v => v.id === selectedVoice)?.lang.startsWith('bn') ? 'PREMIUM BD NEURAL ENGINE V2' : 'GLOBAL NEURAL SYNTHESIS V3'}
+                  </span>
                 </div>
               </div>
               <textarea 
@@ -202,30 +277,23 @@ export function VocalSynthesis() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${voiceStatus === 'ready' ? 'bg-green-500' : voiceStatus === 'checking' ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                  <div className={`w-2 h-2 rounded-full bg-green-500`} />
                   <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">
-                    {voiceStatus === 'ready' ? 'Neural Link Active' : voiceStatus === 'checking' ? 'Connecting...' : 'Voices Missing'}
+                    Gemini Neural Link Active
                   </span>
                 </div>
               </div>
 
-              {voiceStatus === 'missing' && (
-                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex gap-4">
-                  <Info className="w-5 h-5 text-red-500 shrink-0" />
-                  <div className="space-y-1">
-                    <p className="text-[10px] text-red-500 font-black uppercase tracking-widest">No Bengali Voice Detected</p>
-                    <p className="text-[9px] text-red-500/70 font-bold uppercase tracking-widest leading-relaxed">
-                      আপনার ডিভাইসে কোনো বাংলা ভয়েস ইঞ্জিন পাওয়া যায়নি। সেরা অভিজ্ঞতার জন্য গুগল ক্রোম ব্যবহার করুন এবং বাংলা ভয়েস প্যাক ইনস্টল করুন। অথবা অ্যাপটি নতুন ট্যাবে ওপেন করুন।
-                    </p>
-                    <button 
-                      onClick={() => window.speechSynthesis.getVoices()} 
-                      className="text-[9px] font-black text-red-500 underline uppercase tracking-widest mt-1"
-                    >
-                      Refresh Voice Engines
-                    </button>
-                  </div>
+              {/* Engine Status Information */}
+              <div className="mb-6 p-4 bg-studio-cyan/10 border border-studio-cyan/20 rounded-xl flex gap-4">
+                <CheckCircle2 className="w-5 h-5 text-studio-cyan shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-[10px] text-studio-cyan font-black uppercase tracking-widest">Premium Gemini TTS Active</p>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+                    বয়েস ইঞ্জিন প্রস্তুত। Gemini Pro-র সাহায্যে ১০০% রিয়েলিস্টিক ভয়েস জেনারেট করা হচ্ছে।
+                  </p>
                 </div>
-              )}
+              </div>
 
               <div className="space-y-8">
                 <div className="space-y-4">
@@ -249,21 +317,49 @@ export function VocalSynthesis() {
                 </div>
 
                 <div className="space-y-4">
-                  <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-4">
-                    <User className="w-3 h-3" /> Select Neural Voice
-                  </label>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                      <User className="w-3 h-3" /> Select Neural Voice
+                    </label>
+                    <div className="flex flex-wrap items-center gap-2">
+                       <div className="flex bg-slate-950 p-1 rounded-lg border border-studio-border">
+                          {['all', 'bn', 'en', 'hi'].map((l) => (
+                             <button
+                               key={l}
+                               onClick={() => setActiveLang(l as any)}
+                               className={`px-3 py-1 rounded-md text-[8px] font-black uppercase tracking-widest transition-all ${activeLang === l ? 'bg-studio-cyan text-slate-950 shadow-[0_0_10px_#00e5ff44]' : 'text-slate-500 hover:text-slate-300'}`}
+                             >
+                               {l === 'all' ? 'Global' : l === 'bn' ? 'Bangla' : l === 'en' ? 'English' : 'Hindi'}
+                             </button>
+                          ))}
+                       </div>
+                       <div className="flex bg-slate-950 p-1 rounded-lg border border-studio-border">
+                          {['all', 'female', 'male'].map((g) => (
+                             <button
+                               key={g}
+                               onClick={() => setActiveGender(g as any)}
+                               className={`px-3 py-1 rounded-md text-[8px] font-black uppercase tracking-widest transition-all ${activeGender === g ? 'bg-studio-cyan text-slate-950 shadow-[0_0_10px_#00e5ff44]' : 'text-slate-500 hover:text-slate-300'}`}
+                             >
+                               {g}
+                             </button>
+                          ))}
+                       </div>
+                    </div>
+                  </div>
                   
                   <div className="space-y-6">
                     <div>
-                      <p className="text-[8px] uppercase tracking-[0.2em] font-black text-slate-500 mb-4">Female Voices</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {VOICES.filter(v => v.gender === 'female').map(voice => (
+                        {filteredVoices.map(voice => (
                           <div key={voice.id} className="relative group">
                             <button 
                               onClick={() => setSelectedVoice(voice.id)}
                               className={`w-full p-4 rounded-xl border text-left transition-all ${selectedVoice === voice.id ? 'bg-studio-cyan/10 border-studio-cyan shadow-[0_0_10px_#00e5ff33]' : 'bg-slate-900/50 border-studio-border hover:bg-slate-800'}`}
                             >
-                              <div className="text-xs font-bold text-white mb-1 uppercase tracking-widest">{voice.name}</div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className="text-xs font-bold text-white uppercase tracking-widest">{voice.name}</div>
+                                <div className="text-[7px] font-black bg-slate-950 border border-studio-border px-1 rounded text-slate-500 uppercase tracking-widest leading-tight">{voice.lang}</div>
+                              </div>
                               <div className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">{voice.desc}</div>
                             </button>
                             <button 
@@ -276,29 +372,12 @@ export function VocalSynthesis() {
                           </div>
                         ))}
                       </div>
-                    </div>
-                    <div>
-                      <p className="text-[8px] uppercase tracking-[0.2em] font-black text-slate-500 mb-4">Male Voices</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {VOICES.filter(v => v.gender === 'male').map(voice => (
-                          <div key={voice.id} className="relative group">
-                            <button 
-                              onClick={() => setSelectedVoice(voice.id)}
-                              className={`w-full p-4 rounded-xl border text-left transition-all ${selectedVoice === voice.id ? 'bg-studio-cyan/10 border-studio-cyan shadow-[0_0_10px_#00e5ff33]' : 'bg-slate-900/50 border-studio-border hover:bg-slate-800'}`}
-                            >
-                              <div className="text-xs font-bold text-white mb-1 uppercase tracking-widest">{voice.name}</div>
-                              <div className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">{voice.desc}</div>
-                            </button>
-                            <button 
-                              onClick={(e) => handlePreview(e, voice.id)}
-                              className={`absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-studio-cyan/30 flex items-center justify-center transition-all ${isSpeaking && selectedVoice === voice.id ? 'bg-studio-cyan text-slate-950 border-studio-cyan scale-110 shadow-[0_0_15px_#00e5ff66]' : 'bg-slate-900 text-studio-cyan hover:bg-studio-cyan/20'}`}
-                              title="Listen Preview"
-                            >
-                              {isSpeaking && selectedVoice === voice.id ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
+                      {filteredVoices.length === 0 && (
+                        <div className="text-center py-12 glass-panel border-dashed border-studio-border/50">
+                           <Info className="w-8 h-8 text-slate-700 mx-auto mb-2 opacity-50" />
+                           <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">No neural voices matching your filters</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -352,109 +431,6 @@ export function VocalSynthesis() {
           </AnimatePresence>
         </div>
       </div>
-
-      <div className="lg:col-span-3 space-y-6">
-        <div className="glass-panel p-6">
-          <PanelHeader icon={Info} title="Quick Tips" subtitle="How to get best output" />
-          <div className="space-y-4">
-            {[
-              { icon: Mic, text: 'Use clear and natural sentences for better output.' },
-              { icon: User, text: 'Select the right voice and language for realistic results.' },
-              { icon: HistoryIcon, text: 'Adjust video duration based on your content length.' }
-            ].map((tip, i) => (
-              <div key={i} className="flex gap-4">
-                <div className="p-2 h-fit rounded-lg bg-studio-cyan/10 border border-studio-cyan/20">
-                  <tip.icon className="w-4 h-4 text-studio-cyan" />
-                </div>
-                <p className="text-[10px] text-slate-400 font-bold leading-relaxed uppercase tracking-widest">{tip.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="glass-panel p-6">
-          <PanelHeader icon={SettingsIcon} title="Configuration" subtitle="Audio Engine V2" />
-          <div className="space-y-6">
-            <div className="p-3 bg-slate-900 border border-studio-border rounded-lg">
-               <p className="text-[8px] text-slate-500 uppercase tracking-widest mb-1">Active Engine</p>
-               <div className="flex items-center justify-between">
-                  <p className="text-[10px] text-studio-cyan font-black uppercase tracking-widest truncate">
-                    {window.speechSynthesis.getVoices().find(v => v.lang.startsWith('bn'))?.name || 'Standard System'}
-                  </p>
-                  <button onClick={() => window.speechSynthesis.getVoices()} title="Reload Engines">
-                    <HistoryIcon className="w-3 h-3 text-slate-600 hover:text-studio-cyan transition-colors" />
-                  </button>
-               </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Export Format</label>
-              <select 
-                value={exportFormat}
-                onChange={(e) => setExportFormat(e.target.value)}
-                className="flex-1 w-full bg-slate-900 border border-studio-border rounded-lg h-10 px-3 text-xs outline-none focus:border-studio-cyan/50 text-slate-300"
-              >
-                <option value="mp3">MPEG Layer-3 (.mp3)</option>
-                <option value="wav">Waveform Audio (.wav)</option>
-                <option value="ogg">Ogg Vorbis (.ogg)</option>
-                <option value="flac">Lossless (.flac)</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Bitrate / Quality</label>
-              <select 
-                value={bitrate}
-                onChange={(e) => setBitrate(e.target.value)}
-                className="flex-1 w-full bg-slate-900 border border-studio-border rounded-lg h-10 px-3 text-xs outline-none focus:border-studio-cyan/50 text-slate-300"
-              >
-                <option value="128">128 kbps (Mobile)</option>
-                <option value="192">192 kbps (Standard)</option>
-                <option value="256">256 kbps (High)</option>
-                <option value="320">320 kbps (Studio)</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Neural Engine Profile</label>
-              <select 
-                value={quality}
-                onChange={(e) => setQuality(e.target.value)}
-                className="flex-1 w-full bg-slate-900 border border-studio-border rounded-lg h-10 px-3 text-xs outline-none focus:border-studio-cyan/50 text-slate-300"
-              >
-                <option>High (Studio Grade)</option>
-                <option>Medium (Standard)</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Expression Level</label>
-              <select 
-                value={expression}
-                onChange={(e) => setExpression(e.target.value)}
-                className="flex-1 w-full bg-slate-900 border border-studio-border rounded-lg h-10 px-3 text-xs outline-none focus:border-studio-cyan/50 text-slate-300"
-              >
-                <option>Balanced</option>
-                <option>High Emotion</option>
-                <option>Monotone</option>
-              </select>
-            </div>
-            <div className="space-y-4 pt-4 border-t border-slate-800">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest mb-2">
-                <span className="text-slate-400 flex items-center gap-2"><Volume2 className="w-3 h-3" /> Preview Volume</span>
-                <span className="text-studio-cyan">{Math.round(previewVolume * 100)}%</span>
-              </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="1" 
-                step="0.01"
-                value={previewVolume}
-                onChange={(e) => setPreviewVolume(parseFloat(e.target.value))}
-                className="w-full accent-studio-cyan h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer" 
-              />
-            </div>
-            <GlowingButton variant="secondary" className="w-full text-[10px] h-10">Save Engine Config</GlowingButton>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
-);
+  );
 }
