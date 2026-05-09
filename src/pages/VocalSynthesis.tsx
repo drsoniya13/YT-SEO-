@@ -50,6 +50,7 @@ export function VocalSynthesis() {
   const [activeGender, setActiveGender] = useState<'all' | 'male' | 'female'>('all');
   const [activeLang, setActiveLang] = useState<'all' | 'bn' | 'en' | 'hi'>('all');
   const [generatedAudio, setGeneratedAudio] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -62,15 +63,17 @@ export function VocalSynthesis() {
   const stopAudio = () => {
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.src = "";
-      audioRef.current = null;
+      audioRef.current.currentTime = 0;
     }
     setIsSpeaking(false);
   };
 
   const playAudio = async (base64Data: string) => {
+    if (!audioRef.current) return;
+    
     try {
       stopAudio();
+      setErrorMessage(null);
       
       const binaryString = atob(base64Data);
       const len = binaryString.length;
@@ -109,25 +112,22 @@ export function VocalSynthesis() {
       
       const blob = new Blob([combined], { type: 'audio/wav' });
       const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.volume = previewVolume;
       
-      audio.onended = () => {
-        setIsSpeaking(false);
-        URL.revokeObjectURL(url);
-      };
+      audioRef.current.src = url;
+      audioRef.current.volume = previewVolume;
       
-      audio.onerror = (e) => {
-        console.error("Neural playback error:", e);
-        setIsSpeaking(false);
-        URL.revokeObjectURL(url);
-      };
-
-      audioRef.current = audio;
       setIsSpeaking(true);
-      await audio.play();
+      
+      try {
+        await audioRef.current.play();
+      } catch (playErr) {
+        console.warn("Autoplay blocked or playback error:", playErr);
+        // On mobile, if autoplay is blocked, we keep isSpeaking false so the UI shows 'Play' button
+        setIsSpeaking(false);
+      }
     } catch (error) {
       console.error("Error playing neural audio:", error);
+      setErrorMessage("Audio playback failed. Please try again.");
       setIsSpeaking(false);
     }
   };
@@ -141,6 +141,7 @@ export function VocalSynthesis() {
       const voiceProfile = VOICES.find(v => v.id === voiceId);
       if (!voiceProfile) throw new Error("Voice profile not found");
 
+      setErrorMessage(null);
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       
       const langName = voiceProfile.lang.startsWith('bn') ? 'Bengali (Bangladeshi)' : 
@@ -194,6 +195,7 @@ export function VocalSynthesis() {
       }
     } catch (error) {
       console.error("Neural Synthesis Error:", error);
+      setErrorMessage("Generation failed. Check your connection or text and try again.");
       if (!isPreview) setIsGenerating(false);
     }
   };
@@ -204,6 +206,11 @@ export function VocalSynthesis() {
     if (isSpeaking && selectedVoice === voiceId) {
       stopAudio();
     } else {
+      // "Prime" for mobile
+      if (audioRef.current) {
+        audioRef.current.load();
+      }
+      
       setSelectedVoice(voiceId);
       const voice = VOICES.find(v => v.id === voiceId);
       let demoText = "হ্যালো, আমি আপনার জন্য প্রফেশনাল ভয়েস ওভার তৈরি করতে পারি।";
@@ -275,11 +282,23 @@ export function VocalSynthesis() {
 
   const handleGenerate = () => {
     if (!text.trim()) return;
+    
+    // "Prime" the audio element for mobile autoplay
+    if (audioRef.current) {
+      audioRef.current.load();
+    }
+    
     generateNeuralVoice(text, selectedVoice);
   };
 
   return (
     <div className="relative pb-20">
+      <audio 
+        ref={audioRef} 
+        className="hidden" 
+        onEnded={() => setIsSpeaking(false)} 
+        onError={() => setIsSpeaking(false)}
+      />
       <NeuralLoadingOverlay 
         isVisible={isGenerating} 
         message={`Neural Synthesis: ${VOICES.find(v => v.id === selectedVoice)?.lang.startsWith('bn') ? 'PREMIUM BD V2' : 'Global Neural Engine'} Active`} 
@@ -319,6 +338,20 @@ export function VocalSynthesis() {
                 placeholder="Text you want to convert to voice..."
                 className="w-full h-40 md:h-48 bg-slate-900/50 border border-studio-border rounded-xl p-4 text-sm focus:border-studio-cyan/50 outline-none transition-all placeholder:text-slate-700 resize-none"
               />
+              
+              <AnimatePresence>
+                {errorMessage && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2"
+                  >
+                    <Info className="w-4 h-4 text-red-500" />
+                    <span className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{errorMessage}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="flex justify-end mt-2">
                 <span className="text-[10px] font-mono text-slate-500">{text.length} / 5000</span>
               </div>
