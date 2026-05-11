@@ -3,6 +3,7 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
   --color-studio-bg: #020617;
   --color-studio-sidebar: #01040a;
@@ -13,6 +14,7 @@
   --color-studio-border: #1e293b;
   
   --radius-studio: 0.75rem;
+  --radius-premium: 1.25rem;
 }
 
 @layer base {
@@ -34,22 +36,30 @@
 
 @layer components {
   .glass-panel {
-    @apply bg-studio-card backdrop-blur-md border border-studio-border rounded-studio;
+    @apply bg-studio-card backdrop-blur-xl border border-studio-border rounded-premium;
   }
   
   .cyan-glow {
-    @apply shadow-[0_0_15px_rgba(0,229,255,0.15)];
+    @apply shadow-[0_0_25px_rgba(0,229,255,0.1)];
   }
   
   .cyan-border-active {
-    @apply border-studio-cyan shadow-[0_0_10px_rgba(0,229,255,0.2)];
+    @apply border-studio-cyan shadow-[0_0_15px_rgba(0,229,255,0.25)];
   }
 
   .btn-primary {
-    @apply bg-linear-to-r from-studio-cyan/80 to-studio-cyan text-slate-950 font-bold px-6 py-2.5 rounded-studio hover:opacity-90 transition-all active:scale-[0.98] flex items-center justify-center gap-2;
+    @apply bg-linear-to-r from-studio-cyan/90 to-studio-cyan text-slate-950 font-black tracking-widest uppercase text-[10px] px-8 py-3.5 rounded-studio hover:scale-[1.02] shadow-[0_0_20px_#00e5ff44] transition-all active:scale-[0.98] flex items-center justify-center gap-2;
   }
 
   .btn-secondary {
-    @apply bg-slate-800/50 hover:bg-slate-800 border border-studio-border text-slate-300 font-medium px-4 py-2 rounded-studio transition-all active:scale-[0.98] flex items-center justify-center gap-2;
+    @apply bg-slate-800/40 hover:bg-slate-800/80 border border-studio-border text-slate-400 font-black uppercase tracking-widest text-[10px] px-6 py-2.5 rounded-studio transition-all active:scale-[0.98] flex items-center justify-center gap-2;
+  }
+
+  .studio-label {
+    @apply text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 block;
+  }
+
+  .neural-gradient {
+    @apply bg-linear-to-br from-studio-cyan to-blue-500 bg-clip-text text-transparent;
   }
 }

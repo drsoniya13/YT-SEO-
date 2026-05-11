@@ -45,16 +45,30 @@ export function PanelHeader({ icon: Icon, title, subtitle, action }: PanelHeader
   );
 }
 
-export function GlowingButton({ children, onClick, className = "", variant = "primary", disabled = false }: { children: ReactNode, onClick?: () => void, className?: string, variant?: "primary" | "secondary", disabled?: boolean }) {
+export function GlowingButton({ 
+  children, 
+  onClick, 
+  className = "", 
+  variant = "primary", 
+  disabled = false,
+  isLoading = false
+}: { 
+  children: ReactNode, 
+  onClick?: () => void, 
+  className?: string, 
+  variant?: "primary" | "secondary", 
+  disabled?: boolean,
+  isLoading?: boolean
+}) {
   const styles = variant === "primary" ? "btn-primary" : "btn-secondary";
   return (
     <motion.button 
-      whileTap={!disabled ? { scale: 0.98 } : {}}
+      whileTap={!disabled && !isLoading ? { scale: 0.98 } : {}}
       onClick={onClick}
-      disabled={disabled}
-      className={`${styles} relative overflow-hidden group ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      disabled={disabled || isLoading}
+      className={`${styles} relative overflow-hidden group ${className} ${(disabled || isLoading) ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
-      {!disabled && <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-[30deg]" />}
+      {!disabled && !isLoading && <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-[30deg]" />}
       {children}
     </motion.button>
   );

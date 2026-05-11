@@ -18,7 +18,10 @@ import {
   Loader2,
   Copy,
   Check,
-  Camera
+  Camera,
+  ChevronRight,
+  Sparkles,
+  Mic
 } from 'lucide-react';
 import { StatCard, PanelHeader, GlowingButton, NeuralLoadingOverlay } from '../components/Common';
 import { motion, AnimatePresence } from 'motion/react';
@@ -26,12 +29,14 @@ import { useState } from 'react';
 import { generateCreativeContent } from '../services/geminiService';
 
 const CREATION_TOOLS = [
-  { id: 'full_production', icon: Zap, title: 'MASTER FULL PRODUCTION', desc: 'Auto-generate Scene-by-Scene Script, Image/Video Prompts, & SEO in one click.', isNew: true },
-  { id: 'video', icon: Video, title: 'AI VIDEO PROMPT', desc: 'Create cinematic video prompts using AI models.', isNew: true },
+  { id: 'content_architect', icon: Sparkles, title: 'Content Architect', desc: 'Generate full scripts, SEO titles, and trending tags in seconds.', path: 'Content Architect' },
+  { id: 'vocal_pro', icon: Mic, title: 'Vocal Pro', desc: 'Convert your scripts into high-quality human-like voices (Pure BD Accent).', path: 'Vocal Pro' },
+  { id: 'vision_forge', icon: Zap, title: 'Vision Forge', desc: 'Create viral, high-CTR thumbnails and cinematic visual assets.', path: 'Vision Forge' },
 ];
 
-export function Dashboard() {
+export default function Dashboard({ setCurrentPage }: { setCurrentPage: (page: any) => void }) {
   const [topic, setTopic] = useState('');
+  // ... rest of the component
   const [selectedPreset, setSelectedPreset] = useState('VLOG');
   const [selectedLanguage, setSelectedLanguage] = useState('Bengali');
   const [selectedTools, setSelectedTools] = useState<string[]>(['full_production']);
@@ -119,193 +124,239 @@ export function Dashboard() {
   };
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-10 pb-20">
       <NeuralLoadingOverlay 
         isVisible={isGenerating} 
         message="Synthesizing Creative Content" 
         progress={progress} 
       />
+
+      {/* Hero Section */}
+      <div className="relative h-64 md:h-80 rounded-premium overflow-hidden border border-studio-border">
+        <div className="absolute inset-0 bg-linear-to-br from-slate-950 via-slate-900 to-studio-cyan/10" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-center mix-blend-overlay opacity-30" />
+        
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-slate-950 to-transparent" />
+        
+        <div className="relative h-full flex flex-col justify-center px-6 md:px-12 space-y-4">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3"
+          >
+            <div className="p-2 rounded-lg bg-studio-cyan/20 border border-studio-cyan/30 text-studio-cyan cyan-glow">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-studio-cyan">Neural Production Center</span>
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-6xl font-black tracking-tight text-white max-w-2xl leading-none"
+          >
+            CRAFT THE FUTURE OF <span className="neural-gradient">CONTENT</span>
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-sm md:text-base text-slate-400 font-bold uppercase tracking-widest max-w-xl"
+          >
+            All-in-one AI ecosystem for viral YouTubers and professional creators in Bangladesh.
+          </motion.p>
+        </div>
+      </div>
+
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        <StatCard icon={Zap} label="Active Model" value="Gemini" />
-        <StatCard icon={HistoryIcon} label="Total History" value="0" />
-        <StatCard icon={Globe} label="Language" value="Bengali" />
-        <StatCard icon={Layout} label="Current View" value="Home" />
+        <StatCard icon={Zap} label="Active Model" value="Gemini 3 Pro" />
+        <StatCard icon={HistoryIcon} label="Total Projects" value="48" />
+        <StatCard icon={Globe} label="Primary Loc." value="Bangladesh" />
+        <StatCard icon={Layout} label="Studio Active" value="Online" />
       </div>
 
-      {/* Forge Parameters */}
-      <div className="glass-panel p-4 md:p-6">
-        <PanelHeader 
-          icon={Radio} 
-          title="Forge Parameters" 
-          subtitle="Input Stream: Active • Analysis: Standby"
-          action={<GlowingButton variant="secondary" className="text-[10px] h-8 px-3 hidden sm:flex"><History className="w-3 h-3" /> History</GlowingButton>}
-        />
-        
-        <div className="space-y-6">
-          <div>
-            <div className="flex justify-between items-end mb-3">
-              <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-studio-cyan font-bold">
-                <FileText className="w-3 h-3" /> Topic / Input or Script (Optional) *
-              </label>
-              <div className="bg-studio-cyan/10 border border-studio-cyan/20 px-2 py-0.5 rounded flex items-center gap-1 mb-1">
-                <div className="w-1.5 h-1.5 bg-studio-cyan rounded-full animate-pulse" />
-                <span className="text-[8px] font-black text-studio-cyan tracking-widest uppercase">PREMIUM BD NEURAL ENGINE V2</span>
-              </div>
-            </div>
-            <div className="relative group">
-              <textarea 
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g., Travel vlogs, Tech reviews, Cooking tips..."
-                className="w-full h-32 md:h-40 bg-slate-900/50 border border-studio-border rounded-xl p-4 text-sm focus:border-studio-cyan/50 focus:ring-1 focus:ring-studio-cyan/20 outline-none transition-all placeholder:text-slate-700 resize-none"
-              />
-              <button className="absolute bottom-4 right-4 p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-studio-cyan transition-colors border border-studio-border">
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Creator Tools */}
+        <div className="lg:col-span-4 space-y-8">
+          <div className="space-y-4">
+            <label className="studio-label flex items-center gap-2">
+              <Zap className="w-3 h-3 text-studio-cyan" /> Core Engine Modules
+            </label>
             <div className="space-y-3">
-              <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
-                <Globe className="w-3 h-3" /> Select Output Language
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {['Bengali', 'English', 'Both'].map(lang => (
-                  <button 
-                    key={lang} 
-                    onClick={() => setSelectedLanguage(lang)}
-                    className={`btn-secondary h-10 md:h-12 text-[10px] font-black uppercase tracking-widest transition-all ${selectedLanguage === lang ? 'bg-studio-cyan/10 border-studio-cyan text-studio-cyan' : ''}`}
-                  >
-                    {lang}
-                  </button>
-                ))}
-              </div>
+              {CREATION_TOOLS.map((tool) => (
+                <motion.div 
+                  key={tool.id}
+                  whileHover={{ x: 8 }}
+                  onClick={() => setCurrentPage(tool.path)}
+                  className="glass-panel p-5 group cursor-pointer transition-all bg-slate-900/40 hover:bg-studio-cyan/5 hover:border-studio-cyan/30"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-slate-900 border border-studio-border group-hover:border-studio-cyan/50 transition-colors shadow-inner">
+                      <tool.icon className="w-5 h-5 text-slate-400 group-hover:text-studio-cyan" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-xs font-black uppercase tracking-widest text-white group-hover:text-studio-cyan transition-colors mb-1">
+                        {tool.title}
+                      </h4>
+                      <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">{tool.desc}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-studio-cyan transition-colors" />
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Creation Tools Grid */}
-      <div>
-        <div className="flex items-center justify-between mb-6 px-2">
-          <div className="flex items-center gap-2 text-studio-cyan">
-            <Plus className="w-4 h-4" />
-            <h2 className="text-[10px] md:text-[12px] uppercase tracking-[0.2em] font-black">What would you create?</h2>
+          
+          <div className="glass-panel p-6 bg-linear-to-br from-studio-purple/5 to-transparent">
+             <div className="flex items-center gap-3 mb-4">
+               <div className="p-2 rounded bg-studio-purple/20 text-studio-purple">
+                 <PenTool className="w-4 h-4" />
+               </div>
+               <span className="text-[10px] font-black uppercase tracking-widest text-studio-purple">Creator Spotlight</span>
+             </div>
+             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+               "This suite transformed my production time from 10 hours to 10 minutes. The BD voice quality is unmatched."
+             </p>
+             <div className="mt-4 flex items-center gap-2">
+               <div className="w-6 h-6 rounded-full bg-slate-800 border border-studio-border" />
+               <span className="text-[8px] font-black uppercase tracking-widest text-white">Sonya - Tech Reviewer</span>
+             </div>
           </div>
-          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest bg-slate-900 px-3 py-1 rounded-full border border-studio-border">
-            {selectedTools.length} Selected
-          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-          {CREATION_TOOLS.map((tool) => {
-            const isSelected = selectedTools.includes(tool.id);
-            return (
-              <motion.div 
-                key={tool.id}
-                whileHover={{ y: -4 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => toggleTool(tool.id)}
-                className={`glass-panel p-5 relative group cursor-pointer transition-all overflow-hidden ${
-                  isSelected ? 'cyan-border-active bg-studio-cyan/5' : 'hover:border-studio-border bg-studio-card'
-                }`}
-              >
-                <div className={`absolute top-0 left-0 w-full h-1 bg-studio-cyan transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-xl bg-slate-900 border transition-colors ${isSelected ? 'border-studio-cyan/50 shadow-[0_0_10px_#00e5ff33]' : 'border-studio-border'}`}>
-                    <tool.icon className={`w-6 h-6 ${isSelected ? 'text-studio-cyan' : 'text-slate-400 group-hover:text-studio-cyan'}`} />
-                  </div>
-                  <div className={`p-1 rounded-full transition-all ${isSelected ? 'bg-studio-cyan text-slate-900 rotate-45' : 'bg-slate-800 text-slate-500 group-hover:bg-studio-cyan group-hover:text-slate-900'}`}>
-                    <Plus className="w-3 h-3" />
+        {/* Right Column: Forge Parameters */}
+        <div className="lg:col-span-8">
+          <div className="glass-panel h-full flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-studio-border bg-slate-900/30 flex justify-between items-center">
+              <div>
+                <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">Full Production Forge</h2>
+                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">Multi-tool Neural Architect</p>
+              </div>
+              <div className="flex items-center gap-3">
+                 <div className="flex items-center gap-2 px-3 py-1 bg-studio-cyan/5 border border-studio-cyan/20 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-studio-cyan animate-pulse shadow-[0_0_8px_#00e5ff]" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-studio-cyan">Neural Stream Active</span>
+                 </div>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-8 flex-1">
+              <div className="space-y-4">
+                <label className="studio-label flex items-center gap-2">
+                  <FileText className="w-3 h-3 text-studio-cyan" /> Global Directive Injection
+                </label>
+                <div className="relative">
+                  <textarea 
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    placeholder="Enter your video topic, keyword, or partial script..."
+                    className="w-full h-48 bg-slate-950/50 border border-studio-border rounded-xl p-6 text-sm focus:border-studio-cyan/50 focus:ring-1 focus:ring-studio-cyan/20 outline-none transition-all placeholder:text-slate-800 resize-none font-medium"
+                  />
+                  <div className="absolute bottom-6 right-6 flex gap-2">
+                     <button className="p-2.5 rounded-xl bg-slate-900 border border-studio-border text-slate-500 hover:text-studio-cyan transition-colors">
+                        <Plus className="w-4 h-4" />
+                     </button>
                   </div>
                 </div>
-                <h4 className={`text-xs font-black uppercase mb-2 tracking-wide flex items-center gap-2 ${isSelected ? 'text-studio-cyan' : 'text-white'}`}>
-                  {tool.title}
-                  {tool.isNew && <span className="text-[8px] bg-studio-cyan/20 text-studio-cyan px-1.5 py-0.5 rounded border border-studio-cyan/30">NEW</span>}
-                </h4>
-                <p className="text-[10px] text-slate-500 font-medium leading-relaxed uppercase tracking-wider">{tool.desc}</p>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Generation Controls */}
-      <div className="glass-panel p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-           <div className="space-y-4">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
-                <span className="text-slate-400">Video Duration</span>
-                <span className="text-studio-cyan">{Math.floor(duration / 60)}m {duration % 60}s</span>
               </div>
-              <input 
-                type="range" 
-                min="10"
-                max="3600"
-                value={duration}
-                onChange={(e) => handleDurationChange(parseInt(e.target.value))}
-                className="w-full accent-studio-cyan h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer" 
-              />
-              <div className="flex justify-between text-[8px] font-bold text-slate-500 tracking-widest">
-                <span>10 Seconds</span>
-                <span>60 Minutes</span>
-              </div>
-           </div>
 
-           <div className="space-y-4">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
-                <span className="text-slate-400">Script Word Count</span>
-                <span className="text-studio-cyan font-mono tracking-widest">{wordCount} WORDS</span>
-              </div>
-              <input 
-                type="range" 
-                min="25"
-                max="10000"
-                value={wordCount}
-                onChange={(e) => handleWordChange(parseInt(e.target.value))}
-                className="w-full accent-studio-cyan h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer" 
-              />
-              <div className="flex justify-between text-[8px] font-bold text-slate-500 tracking-widest">
-                <span>25 Words</span>
-                <span>10k Words</span>
-              </div>
-           </div>
-        </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <label className="studio-label flex items-center gap-2">
+                    <Globe className="w-3 h-3 text-studio-cyan" /> Linguistics
+                  </label>
+                  <div className="flex gap-2">
+                    {['Bengali', 'English', 'Both'].map(lang => (
+                      <button 
+                        key={lang} 
+                        onClick={() => setSelectedLanguage(lang)}
+                        className={`flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${selectedLanguage === lang ? 'bg-studio-cyan text-slate-950 border-studio-cyan shadow-[0_0_15px_#00e5ff44]' : 'bg-slate-900/50 border-studio-border text-slate-500 hover:border-slate-700'}`}
+                      >
+                        {lang}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-        <div className="mt-8 space-y-4">
-          <GlowingButton 
-            onClick={handleGenerate}
-            disabled={selectedTools.length === 0 || isGenerating}
-            className={`w-full h-12 uppercase tracking-[0.3em] font-black text-xs ${isGenerating ? 'opacity-50 cursor-wait' : ''}`}
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Processing Neural Synthesis...
-              </>
-            ) : (
-              <>
-                <Zap className="w-4 h-4 fill-current" />
-                Generate Content ({selectedTools.length})
-              </>
-            )}
-          </GlowingButton>
+                <div className="space-y-4">
+                   <label className="studio-label flex items-center gap-2">
+                    <Video className="w-3 h-3 text-studio-cyan" /> Format Preset
+                  </label>
+                  <div className="flex gap-2">
+                    {['VLOG', 'DOCU', 'PROMO'].map(preset => (
+                      <button 
+                        key={preset} 
+                        onClick={() => setSelectedPreset(preset)}
+                        className={`flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${selectedPreset === preset ? 'bg-studio-cyan text-slate-950 border-studio-cyan shadow-[0_0_15px_#00e5ff44]' : 'bg-slate-900/50 border-studio-border text-slate-500 hover:border-slate-700'}`}
+                      >
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-          {isGenerating && (
-            <div className="w-full h-1 bg-slate-900 rounded-full overflow-hidden border border-studio-border">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                className="h-full bg-studio-cyan shadow-[0_0_10px_#00e5ff]"
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-slate-900">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center studio-label mb-0">
+                    <span className="flex items-center gap-2"><Play className="w-3 h-3" /> Duration</span>
+                    <span className="text-studio-cyan lowercase text-[11px]">{Math.floor(duration / 60)}m {duration % 60}s</span>
+                  </div>
+                  <input 
+                    type="range" min="10" max="3600" value={duration}
+                    onChange={(e) => handleDurationChange(parseInt(e.target.value))}
+                    className="w-full accent-studio-cyan h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer" 
+                  />
+                  <div className="flex justify-between text-[8px] font-black text-slate-600 tracking-widest uppercase">
+                    <span>10s</span>
+                    <span>1h</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                   <div className="flex justify-between items-center studio-label mb-0">
+                    <span className="flex items-center gap-2"><FileText className="w-3 h-3" /> Words</span>
+                    <span className="text-studio-cyan text-[11px] font-mono">{wordCount}</span>
+                  </div>
+                  <input 
+                    type="range" min="25" max="10000" value={wordCount}
+                    onChange={(e) => handleWordChange(parseInt(e.target.value))}
+                    className="w-full accent-studio-cyan h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer" 
+                  />
+                   <div className="flex justify-between text-[8px] font-black text-slate-600 tracking-widest uppercase">
+                    <span>25w</span>
+                    <span>10kw</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
+
+            <div className="p-6 bg-slate-900/50 border-t border-studio-border">
+              <GlowingButton 
+                onClick={handleGenerate}
+                disabled={isGenerating || !topic.trim()}
+                className={`w-full h-14 cyan-glow ${isGenerating ? 'opacity-50' : ''}`}
+              >
+                {isGenerating ? (
+                   <div className="flex items-center gap-3">
+                     <Loader2 className="w-5 h-5 animate-spin" />
+                     <span className="animate-pulse">Synthesizing Neural Directives...</span>
+                   </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Zap className="w-5 h-5 fill-current" />
+                    <span>Initiate Multi-Tool Production</span>
+                  </div>
+                )}
+              </GlowingButton>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Output Section */}
+      {/* Output Section with refined cards */}
       <AnimatePresence mode="wait">
         {!showOutput ? (
           <motion.div 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type Page = 'Dashboard' | 'Vocal Synthesis' | 'Frequency Extractor' | 'Script Forge' | 'Lens Alchemy' | 'History' | 'API Keys' | 'Settings';
+export type Page = 'Dashboard' | 'Content Architect' | 'Vocal Pro' | 'Vision Forge' | 'Signal Sync' | 'History' | 'API Keys' | 'Settings';
 
 export interface AppState {
   currentPage: Page;
@@ -13,10 +13,10 @@ export interface AppState {
 
 export const NAV_ITEMS = [
   { id: 'Dashboard', icon: 'LayoutDashboard', label: 'Dashboard' },
-  { id: 'Vocal Synthesis', icon: 'Mic', label: 'Vocal Synthesis' },
-  { id: 'Frequency Extractor', icon: 'Activity', label: 'Frequency Extractor' },
-  { id: 'Script Forge', icon: 'FileText', label: 'Script Forge' },
-  { id: 'Lens Alchemy', icon: 'Image', label: 'Lens Alchemy' },
+  { id: 'Content Architect', icon: 'Sparkles', label: 'Content Architect' },
+  { id: 'Vocal Pro', icon: 'Mic', label: 'Vocal Pro' },
+  { id: 'Vision Forge', icon: 'Image', label: 'Vision Forge' },
+  { id: 'Signal Sync', icon: 'Activity', label: 'Signal Sync' },
   { id: 'History', icon: 'History', label: 'History' },
   { id: 'API Keys', icon: 'KeyRound', label: 'API Keys' },
   { id: 'Settings', icon: 'Settings', label: 'Settings' },

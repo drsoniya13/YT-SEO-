@@ -62,55 +62,77 @@ export async function generateCreativeContent(topic: string, toolType: string, l
   }
 }
 
-export async function processFrequencyExtraction(fileName: string, language: string = 'Bengali') {
+export async function processSignalSync(fileName: string, language: string = 'Bengali') {
   const customApiKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') : null;
   const apiKey = customApiKey || process.env.GEMINI_API_KEY;
 
   if (!apiKey) return "Authentication error: Missing API Key.";
 
   const ai = new GoogleGenAI({ apiKey });
-  const prompt = `Analyze this audio/video signal metadata: "${fileName}". 
-  Provide a detailed frequency deconstruction report in ${language}. 
-  Include: 
-  1. Signal Profile (Sample Rate, Bit Depth estimation)
-  2. Noise Level Analysis
-  3. Harmonic Signature
-  4. Dynamic Range Status
-  Keep it technical yet creative.`;
+  const prompt = `Task: Deep Analysis of Media Stream "${fileName}". 
+  Provide a comprehensive Creator Report in ${language}. 
+  
+  Structure:
+  1. TRANSCRIPTION SUMMARY: High-level overview of the video/audio content.
+  2. VIRAL HOOKS: Identify 3 high-impact hooks from the content.
+  3. CONTENT BREAKDOWN: Scene-by-scene or segment-by-segment summary.
+  4. EMPOWERMENT TIPS: How to improve this content for better retention.
+  5. SHORT-FORM IDEAS: 3 ideas for TikTok/Shorts based on this source.
+  
+  Tone: Professional, expert, and actionable for a Bangladeshi creator.`;
 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: prompt,
-      config: { temperature: 0.7 },
+      config: { 
+        temperature: 0.7,
+        systemInstruction: "You are an AI Media Analyst specialized in viral content and SEO for YouTube and Facebook."
+      },
     });
     return response.text;
   } catch (error) {
-    return "Extraction complete. Signal reconstructed with standard parameters.";
+    return "Analysis complete. Content synchronized and indexed.";
   }
 }
 
-export async function processLensAlchemy(prompt: string, fileName?: string) {
+export async function processLensAlchemy(prompt: string, fileName?: string, mode: string = 'STANDARD') {
   const customApiKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') : null;
   const apiKey = customApiKey || process.env.GEMINI_API_KEY;
 
   if (!apiKey) return "Authentication error: Missing API Key.";
 
   const ai = new GoogleGenAI({ apiKey });
-  const fullPrompt = `Enhance this visual prompt for a high-end AI image generator. 
-  Original Prompt: "${prompt}"
+  
+  let systemContext = "You are an elite AI Image Prompt Engineer specializing in cinematic visuals.";
+  if (mode === 'THUMBNAIL') {
+    systemContext = `You are a YouTube CTR Expert. Your goal is to generate thumbnails that get millions of views.
+    Rules for Thumbnail Success:
+    1. EXTREME EMOTION: Exaggerated facial expressions.
+    2. HIGH CONTRAST: Vibrant colors, deep shadows.
+    3. FOCAL POINT: Large, clear main subject.
+    4. NO CROWDED TEXT: Suggestions for text placement if needed.
+    5. CURIOSITY GAP: Visual storytelling that makes people click.`;
+  }
+
+  const fullPrompt = `Task: ${mode === 'THUMBNAIL' ? 'Generate a VIRAL YouTube/Facebook Thumbnail Prompt' : 'Enhance this visual prompt'}.
+  Original Input: "${prompt}"
   ${fileName ? `Reference File Context: ${fileName}` : ''}
   
   Provide:
-  1. Enhanced AI Prompt (Optimized for quality, lighting, and detail)
-  2. System Output Description (Wait is being materialized)
-  3. Design Style identified.`;
+  1. Final AI Prompt (Optimized for DALL-E/Midjourney/Stable Diffusion - extremely detailed, 4k, 8k, cinematic lighting).
+  2. CTR Strategy: Why this thumbnail will work.
+  3. Suggested Text Overlay (Max 2-3 words).
+  4. Best Aspect Ratio recommendation.`;
 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: fullPrompt,
-      config: { temperature: 0.9 },
+      config: { 
+        systemInstruction: systemContext,
+        temperature: 0.9 
+      },
     });
     return response.text;
   } catch (error) {

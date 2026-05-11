@@ -19,7 +19,11 @@ import {
   Moon,
   User,
   Globe,
-  X
+  X,
+  Sparkles,
+  Search,
+  MessageSquare,
+  Layout
 } from 'lucide-react';
 import { Page, NAV_ITEMS } from '../types';
 
@@ -33,7 +37,11 @@ const iconMap: Record<string, any> = {
   History,
   FolderRoot,
   KeyRound,
-  Settings
+  Settings,
+  Sparkles,
+  Search,
+  MessageSquare,
+  Layout
 };
 
 interface SidebarProps {
@@ -79,7 +87,7 @@ export function Sidebar({ currentPage, setCurrentPage, isOpen, setIsOpen, isMobi
                   exit={{ opacity: 0, x: -10 }}
                   className="text-xl font-bold tracking-tighter text-white"
                 >
-                  YT Studio
+                  Creator AI Suite
                 </motion.span>
               )}
             </AnimatePresence>

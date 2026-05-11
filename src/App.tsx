@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Sidebar, Header } from './components/Navigation';
-import { Dashboard } from './pages/Dashboard';
-import { VocalSynthesis } from './pages/VocalSynthesis';
-import { FrequencyExtractor } from './pages/FrequencyExtractor';
+import Dashboard from './pages/Dashboard';
+import VocalPro from './pages/VocalPro';
+import SignalSync from './pages/SignalSync';
 import { Settings } from './pages/Settings';
-import { LensAlchemy } from './pages/LensAlchemy';
-import { ScriptForge } from './pages/ScriptForge';
+import VisionForge from './pages/VisionForge';
+import ContentArchitect from './pages/ContentArchitect';
 import { ApiKeys } from './pages/ApiKeys';
 import { Page } from './types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -34,15 +34,15 @@ export default function App() {
   const renderPage = () => {
     switch (currentPage) {
       case 'Dashboard':
-        return <Dashboard />;
-      case 'Vocal Synthesis':
-        return <VocalSynthesis />;
-      case 'Frequency Extractor':
-        return <FrequencyExtractor />;
-      case 'Script Forge':
-        return <ScriptForge />;
-      case 'Lens Alchemy':
-        return <LensAlchemy />;
+        return <Dashboard setCurrentPage={setCurrentPage} />;
+      case 'Content Architect':
+        return <ContentArchitect />;
+      case 'Vocal Pro':
+        return <VocalPro />;
+      case 'Signal Sync':
+        return <SignalSync />;
+      case 'Vision Forge':
+        return <VisionForge />;
       case 'API Keys':
         return <ApiKeys />;
       case 'Settings':
@@ -103,9 +103,9 @@ export default function App() {
                    <div className="w-5 h-5 bg-studio-cyan rounded flex items-center justify-center">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-slate-950"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></svg>
                    </div>
-                   YT Studio
+                   Creator AI Suite
                  </div>
-                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">© 2024 YT STUDIO AI. All rights reserved.</p>
+                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">© 2024 CREATOR AI SUITE. All rights reserved.</p>
               </div>
               <div className="flex flex-wrap justify-center gap-4 md:gap-8">
                  <a href="#" className="text-[10px] text-slate-500 hover:text-studio-cyan transition-colors font-bold uppercase tracking-widest">Privacy Policy</a>
