@@ -139,3 +139,44 @@ export async function processLensAlchemy(prompt: string, fileName?: string, mode
     return "Alchemy complete. Visualized data ready.";
   }
 }
+
+export async function generateAdScript(product: string, targetAudience: string, language: string = 'Bengali') {
+  const customApiKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') : null;
+  const apiKey = customApiKey || process.env.GEMINI_API_KEY;
+
+  if (!apiKey) throw new Error("API Key missing.");
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const prompt = `Task: Create a HIGH-CONVERTING Viral Ad Script for a product/service.
+  Product/Project: "${product}"
+  Target Audience: "${targetAudience}"
+  Language: ${language}
+
+  Structure:
+  1. AD CONCEPT: A unique, creative idea for the ad.
+  2. THE HOOK: The first 3 seconds that stop the scroll.
+  3. PROBLEM/SOLUTION: Clearly define why the audience needs this.
+  4. SCRIPT (SCENE BY SCENE): 
+     - Scene #
+     - Visual Direction
+     - Voiceover (Natural Bangladeshi Bengali if language is Bengali)
+  5. CALL TO ACTION: A powerful, urgent CTA.
+  6. AD COPY: Optimized for FB/Insta ads.
+
+  Tone: Energetic, persuasive, and culturally relevant to Bangladesh if in Bengali.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        systemInstruction: "You are a professional Ad Copywriter and Viral Marketing Expert in Bangladesh.",
+        temperature: 0.8
+      },
+    });
+    return response.text;
+  } catch (error) {
+    throw error;
+  }
+}

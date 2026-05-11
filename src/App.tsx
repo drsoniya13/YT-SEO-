@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { Sidebar, Header } from './components/Navigation';
 import Dashboard from './pages/Dashboard';
 import VocalPro from './pages/VocalPro';
-import SignalSync from './pages/SignalSync';
 import { Settings } from './pages/Settings';
 import VisionForge from './pages/VisionForge';
 import ContentArchitect from './pages/ContentArchitect';
+import AdForge from './pages/AdForge';
+import History from './pages/History';
 import { ApiKeys } from './pages/ApiKeys';
 import { Page } from './types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -37,12 +38,14 @@ export default function App() {
         return <Dashboard setCurrentPage={setCurrentPage} />;
       case 'Content Architect':
         return <ContentArchitect />;
+      case 'Ad Forge':
+        return <AdForge />;
       case 'Vocal Pro':
         return <VocalPro />;
-      case 'Signal Sync':
-        return <SignalSync />;
       case 'Vision Forge':
         return <VisionForge />;
+      case 'History':
+        return <History />;
       case 'API Keys':
         return <ApiKeys />;
       case 'Settings':
@@ -69,8 +72,8 @@ export default function App() {
       
       <motion.main 
         animate={{ 
-          marginLeft: isMobile ? 0 : (isSidebarOpen ? 260 : 80),
-          width: isMobile ? '100%' : `calc(100% - ${isSidebarOpen ? 260 : 80}px)`
+          marginLeft: isMobile ? 0 : (isSidebarOpen ? 280 : 88),
+          width: isMobile ? '100%' : `calc(100% - ${isSidebarOpen ? 280 : 88}px)`
         }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
         className="flex-1 flex flex-col min-h-screen overflow-x-hidden"
@@ -103,9 +106,9 @@ export default function App() {
                    <div className="w-5 h-5 bg-studio-cyan rounded flex items-center justify-center">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-slate-950"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></svg>
                    </div>
-                   Creator AI Suite
+                   VOCALPRO NEURAL STUDIO
                  </div>
-                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">© 2024 CREATOR AI SUITE. All rights reserved.</p>
+                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">© 2024 VOCALPRO NEURAL STUDIO. All rights reserved.</p>
               </div>
               <div className="flex flex-wrap justify-center gap-4 md:gap-8">
                  <a href="#" className="text-[10px] text-slate-500 hover:text-studio-cyan transition-colors font-bold uppercase tracking-widest">Privacy Policy</a>

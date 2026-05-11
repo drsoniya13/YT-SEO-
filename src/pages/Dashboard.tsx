@@ -21,7 +21,9 @@ import {
   Camera,
   ChevronRight,
   Sparkles,
-  Mic
+  Mic,
+  Target,
+  LayoutGrid
 } from 'lucide-react';
 import { StatCard, PanelHeader, GlowingButton, NeuralLoadingOverlay } from '../components/Common';
 import { motion, AnimatePresence } from 'motion/react';
@@ -30,6 +32,7 @@ import { generateCreativeContent } from '../services/geminiService';
 
 const CREATION_TOOLS = [
   { id: 'content_architect', icon: Sparkles, title: 'Content Architect', desc: 'Generate full scripts, SEO titles, and trending tags in seconds.', path: 'Content Architect' },
+  { id: 'ad_forge', icon: Target, title: 'Ad Forge', desc: 'Synthesize viral ad scripts with high-conversion psychology.', path: 'Ad Forge' },
   { id: 'vocal_pro', icon: Mic, title: 'Vocal Pro', desc: 'Convert your scripts into high-quality human-like voices (Pure BD Accent).', path: 'Vocal Pro' },
   { id: 'vision_forge', icon: Zap, title: 'Vision Forge', desc: 'Create viral, high-CTR thumbnails and cinematic visual assets.', path: 'Vision Forge' },
 ];

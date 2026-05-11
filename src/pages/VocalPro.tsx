@@ -32,6 +32,7 @@ const VOICES = [
   { id: 'arif', name: 'Arif', category: 'Marketing', desc: 'Youthful • Dynamic BD Tone', gender: 'male', lang: 'bn-BD', geminiVoice: 'Puck', vibe: 'Energetic' },
   { id: 'tanvir', name: 'Tanvir', category: 'Corporate', desc: 'Professional • Trustworthy', gender: 'male', lang: 'bn-BD', geminiVoice: 'Charon', vibe: 'Professional' },
   { id: 'rahat', name: 'Rahat', category: 'Documentary', desc: 'Deep • Rich Cinematic BD', gender: 'male', lang: 'bn-BD', geminiVoice: 'Fenrir', vibe: 'Dramatic' },
+  { id: 'zoya', name: 'Zoya', category: 'Ad Expert', desc: 'Persuasive • Fast Paced BD', gender: 'female', lang: 'bn-BD', geminiVoice: 'Aoede', vibe: 'Energetic' },
 
   // English (EN)
   { id: 'james', name: 'James', category: 'Studio', desc: 'Professional • Studio Quality', gender: 'male', lang: 'en-US', geminiVoice: 'Puck', vibe: 'Professional' },
